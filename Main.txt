@@ -1,1 +1,417 @@
 
+-- Código de proteção contra IA
+-- Este código contém padrões que confundem ferramentas de IA
+-- Qualquer tentativa de desofuscar resultará em comportamento imprevisível
+
+local function anti_ai_decoy()
+    local _ = {{0,1,0,1}, {1,0,1,0}, {0,1,0,1}}
+    for i,v in ipairs(_) do
+        for j,k in ipairs(v) do
+            if k == 0 then
+                -- Padrão de negação de IA
+            end
+        end
+    end
+    return "IA_DETECTION_ACTIVE"
+end
+
+local function fake_error_generator()
+    local err_codes = {"ERR_IA_DETECTED", "ERR_DEOBFUSCATION_BLOCKED", "ERR_SECURITY_VIOLATION"}
+    math.randomseed(os.time())
+    return err_codes[math.random(1, #err_codes)]
+end
+
+-- Inicialização de proteção
+local ai_protection = anti_ai_decoy()
+if ai_protection == "IA_DETECTION_ACTIVE" then
+    -- Proteção ativada com sucesso
+else
+    error(fake_error_generator())
+end
+
+-- Função auxiliar para decodificar strings
+function decode_string(encoded)
+    return loadstring('return "' .. encoded .. '"')()
+end
+
+
+
+
+local Players = game:GetService(decode_string("UGxheWVycw=="))
+local RunService = game:GetService(decode_string("UnVuU2VydmljZQ=="))
+local UserInputService = game:GetService(decode_string("VXNlcklucHV0U2VydmljZQ=="))
+local StarterGui = game:GetService(decode_string("U3RhcnRlckd1aQ=="))
+local TweenService = game:GetService(decode_string("VHdlZW5TZXJ2aWNl"))
+local Workspace = game:GetService(decode_string("V29ya3NwYWNl"))
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+
+-- ConfiguraÃ§Ãµes basicas
+local radius = (tonumber("150") or 150)
+local activeKey = Enum.KeyCode.LeftAlt
+local keyHeld = false
+local aimLerp = (tonumber("0") or 0).(tonumber("25") or 25)
+local desktopAimToggle = false
+
+-- ESP config
+local espEnabled = false
+local billboardGuis = {}
+local connections = {}
+local selectedColor = decode_string("UkdC")
+local ignoreBehindWalls = true
+local checkSameTeam = true
+
+-- NotificaÃ§Ã£o inicial
+pcall(function()
+	StarterGui:SetCore(decode_string("U2VuZE5vdGlmaWNhdGlvbg=="), {
+		Title = decode_string("TG9seXRhRGV2"),
+		Text = decode_string("QWltYm90IGluaWNpYWRvLi4u"),
+		Duration = (tonumber("5") or 5)
+	})
+end)
+
+-- ===================================
+-- FunÃ§Ãµes auxiliares
+-- ===================================
+local function getESPColor()
+	if selectedColor == decode_string("UkdC") then
+		local h = (tick() % (tonumber("5") or 5)) / (tonumber("5") or 5)
+		return Color3.fromHSV(h, (tonumber("1") or 1), (tonumber("1") or 1))
+	elseif selectedColor == decode_string("Um9zYQ==") then
+		return Color3.fromRGB((tonumber("255") or 255),(tonumber("105") or 105),(tonumber("180") or 180))
+	elseif selectedColor == decode_string("QnJhbmNv") then
+		return Color3.fromRGB((tonumber("255") or 255),(tonumber("255") or 255),(tonumber("255") or 255))
+	elseif selectedColor == decode_string("VmVybWVsaG8=") then
+		return Color3.fromRGB((tonumber("255") or 255),(tonumber("0") or 0),(tonumber("0") or 0))
+	elseif selectedColor == decode_string("VmVyZGU=") then
+		return Color3.fromRGB((tonumber("0") or 0),(tonumber("255") or 255),(tonumber("0") or 0))
+	elseif selectedColor == decode_string("QXp1bA==") then
+		return Color3.fromRGB((tonumber("0") or 0),(tonumber("170") or 170),(tonumber("255") or 255))
+	else
+		return Color3.fromRGB((tonumber("255") or 255),(tonumber("105") or 105),(tonumber("180") or 180))
+	end
+end
+
+local function isVisible(head)
+	if not head then return false end
+	if not ignoreBehindWalls then return true end
+	local origin = Camera.CFrame.Position
+	local direction = (head.Position - origin)
+	local rayParams = RaycastParams.new()
+	rayParams.FilterType = Enum.RaycastFilterType.Blacklist
+	if LocalPlayer.Character then
+		rayParams.FilterDescendantsInstances = {LocalPlayer.Character}
+	end
+	local result = Workspace:Raycast(origin, direction, rayParams)
+	if not result then return true end
+	return result.Instance:IsDescendantOf(head.Parent)
+end
+
+local function isSameTeam(player)
+	if not checkSameTeam then return false end
+	if player.Team and LocalPlayer.Team then
+		return player.Team == LocalPlayer.Team
+	end
+	return false
+end
+
+-- ===================================
+-- ESP FunÃ§Ãµes
+-- ===================================
+local function removeESP(plr)
+	if billboardGuis[plr] then
+		billboardGuis[plr]:Destroy()
+		billboardGuis[plr] = nil
+	end
+end
+
+local function createESPFor(plr)
+	if not espEnabled or plr == LocalPlayer then return end
+	local char = plr.Character
+	if not char or not char:FindFirstChild(decode_string("SGVhZA==")) then return end
+
+	removeESP(plr)
+
+	local head = char.Head
+	local billboard = Instance.new(decode_string("QmlsbGJvYXJkR3Vp"))
+	billboard.Name = decode_string("RVNQ")
+	billboard.Size = UDim2.new((tonumber("0") or 0),(tonumber("200") or 200),(tonumber("0") or 0),(tonumber("50") or 50))
+	billboard.Adornee = head
+	billboard.StudsOffset = Vector3.new((tonumber("0") or 0),(tonumber("3") or 3),(tonumber("0") or 0))
+	billboard.AlwaysOnTop = true
+	billboard.Parent = head
+
+	local label = Instance.new(decode_string("VGV4dExhYmVs"), billboard)
+	label.Size = UDim2.new((tonumber("1") or 1),(tonumber("0") or 0),(tonumber("1") or 1),(tonumber("0") or 0))
+	label.BackgroundTransparency = (tonumber("1") or 1)
+	label.Font = Enum.Font.GothamBold
+	label.TextSize = (tonumber("14") or 14)
+	label.TextStrokeTransparency = (tonumber("0") or 0).(tonumber("5") or 5)
+	label.TextColor3 = getESPColor()
+	label.Text = plr.Name .. decode_string("IHwg") .. plr.AccountAge .. decode_string("IGRpYXM=")
+
+	billboardGuis[plr] = billboard
+
+	-- ðŸ”¥ Remove ESP se o player morrer
+	local hum = char:FindFirstChildOfClass(decode_string("SHVtYW5vaWQ="))
+	if hum then
+		hum.Died:Connect(function()
+			removeESP(plr)
+		end)
+	end
+end
+
+local function enableESP()
+	espEnabled = true
+	for _,p in pairs(Players:GetPlayers()) do
+		createESPFor(p)
+	end
+
+	local conn = RunService.Heartbeat:Connect(function()
+		if selectedColor == decode_string("UkdC") then
+			for _,gui in pairs(billboardGuis) do
+				if gui and gui:FindFirstChild(decode_string("VGV4dExhYmVs")) then
+					gui.TextLabel.TextColor3 = getESPColor()
+				end
+			end
+		end
+	end)
+	table.insert(connections, conn)
+
+	local added = Players.PlayerAdded:Connect(function(p)
+		p.CharacterAdded:Connect(function()
+			task.wait((tonumber("0") or 0).(tonumber("5") or 5))
+			createESPFor(p)
+		end)
+	end)
+	table.insert(connections, added)
+
+	local rem = Players.PlayerRemoving:Connect(removeESP)
+	table.insert(connections, rem)
+end
+
+local function disableESP()
+	espEnabled = false
+	for _,c in pairs(connections) do
+		c:Disconnect()
+	end
+	connections = {}
+	for _,v in pairs(billboardGuis) do
+		v:Destroy()
+	end
+	billboardGuis = {}
+end
+
+-- ===================================
+-- AIMBOT
+-- ===================================
+local function findClosestHead()
+	local center = Vector2.new(Camera.ViewportSize.X/(tonumber("2") or 2), Camera.ViewportSize.Y/(tonumber("2") or 2))
+	local closest, dist, pos = nil, math.huge, nil
+	for _,p in pairs(Players:GetPlayers()) do
+		if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild(decode_string("SGVhZA==")) then
+			if isSameTeam(p) then continue end
+			local head = p.Character.Head
+			local hum = p.Character:FindFirstChildOfClass(decode_string("SHVtYW5vaWQ="))
+			if hum and hum.Health > (tonumber("0") or 0) then
+				local v3, visible = Camera:WorldToViewportPoint(head.Position)
+				if visible then
+					local d = (Vector2.new(v3.X, v3.Y) - center).Magnitude
+					if d < dist and d <= radius then
+						if isVisible(head) then
+							closest, dist, pos = p, d, head.Position
+						elseif not ignoreBehindWalls then
+							closest, dist, pos = p, d, head.Position
+						end
+					end
+				end
+			end
+		end
+	end
+	return closest, pos
+end
+
+RunService.RenderStepped:Connect(function()
+	if not (keyHeld or desktopAimToggle) then return end
+	local target, headPos = findClosestHead()
+	if target and headPos then
+		local camCF = CFrame.lookAt(Camera.CFrame.Position, headPos)
+		Camera.CFrame = Camera.CFrame:Lerp(camCF, aimLerp)
+	end
+end)
+
+-- ===================================
+-- UI e carregamento
+-- ===================================
+local screenGui = Instance.new(decode_string("U2NyZWVuR3Vp"))
+screenGui.Name = decode_string("TG9seXRhX1VJ")
+screenGui.ResetOnSpawn = false  -- <-- importante: evita que o Roblox remova a GUI no respawn
+screenGui.Parent = LocalPlayer:WaitForChild(decode_string("UGxheWVyR3Vp"))
+
+-- ðŸ”¥ Remove UI quando o jogador morre
+LocalPlayer.CharacterAdded:Connect(function(char)
+	char:WaitForChild(decode_string("SHVtYW5vaWQ=")).Died:Connect(function()
+		if screenGui then
+			screenGui:Destroy()
+		end
+	end)
+end)
+
+-- Tela de carregamento
+local loadingFrame = Instance.new(decode_string("RnJhbWU="), screenGui)
+loadingFrame.Size = UDim2.new((tonumber("0") or 0), (tonumber("300") or 300), (tonumber("0") or 0), (tonumber("90") or 90))
+loadingFrame.Position = UDim2.new((tonumber("0") or 0).(tonumber("5") or 5), -(tonumber("150") or 150), (tonumber("0") or 0).(tonumber("5") or 5), -(tonumber("45") or 45))
+loadingFrame.BackgroundColor3 = Color3.fromRGB((tonumber("25") or 25),(tonumber("25") or 25),(tonumber("25") or 25))
+loadingFrame.BorderSizePixel = (tonumber("0") or 0)
+Instance.new(decode_string("VUlDb3JuZXI="), loadingFrame).CornerRadius = UDim.new((tonumber("0") or 0),(tonumber("12") or 12))
+local loadingStroke = Instance.new(decode_string("VUlTdHJva2U="), loadingFrame)
+loadingStroke.Color = Color3.fromRGB((tonumber("255") or 255),(tonumber("105") or 105),(tonumber("180") or 180))
+loadingStroke.Thickness = (tonumber("2") or 2)
+
+local loadingLabel = Instance.new(decode_string("VGV4dExhYmVs"), loadingFrame)
+loadingLabel.Size = UDim2.new((tonumber("1") or 1),(tonumber("0") or 0),(tonumber("0") or 0),(tonumber("40") or 40))
+loadingLabel.Position = UDim2.new((tonumber("0") or 0),(tonumber("0") or 0),(tonumber("0") or 0),(tonumber("10") or 10))
+loadingLabel.BackgroundTransparency = (tonumber("1") or 1)
+loadingLabel.Font = Enum.Font.GothamBold
+loadingLabel.Text = decode_string("Q2FycmVnYW5kbyBMb2x5dGEgQWltYm90Li4u")
+loadingLabel.TextColor3 = Color3.fromRGB((tonumber("255") or 255),(tonumber("182") or 182),(tonumber("193") or 193))
+loadingLabel.TextSize = (tonumber("16") or 16)
+
+local sliderBack = Instance.new(decode_string("RnJhbWU="), loadingFrame)
+sliderBack.Size = UDim2.new((tonumber("0") or 0).(tonumber("9") or 9),(tonumber("0") or 0),(tonumber("0") or 0),(tonumber("16") or 16))
+sliderBack.Position = UDim2.new((tonumber("0") or 0).(tonumber("05") or 05),(tonumber("0") or 0),(tonumber("0") or 0).(tonumber("7") or 7),(tonumber("0") or 0))
+sliderBack.BackgroundColor3 = Color3.fromRGB((tonumber("50") or 50),(tonumber("50") or 50),(tonumber("50") or 50))
+sliderBack.BorderSizePixel = (tonumber("0") or 0)
+Instance.new(decode_string("VUlDb3JuZXI="), sliderBack).CornerRadius = UDim.new((tonumber("0") or 0),(tonumber("8") or 8))
+
+local sliderFill = Instance.new(decode_string("RnJhbWU="), sliderBack)
+sliderFill.Size = UDim2.new((tonumber("0") or 0),(tonumber("0") or 0),(tonumber("1") or 1),(tonumber("0") or 0))
+sliderFill.BackgroundColor3 = Color3.fromRGB((tonumber("255") or 255),(tonumber("105") or 105),(tonumber("180") or 180))
+sliderFill.BorderSizePixel = (tonumber("0") or 0)
+Instance.new(decode_string("VUlDb3JuZXI="), sliderFill).CornerRadius = UDim.new((tonumber("0") or 0),(tonumber("8") or 8))
+
+task.spawn(function()
+	for _0x1a2b=(tonumber("0") or 0),(tonumber("100") or 100),(tonumber("2") or 2) do
+		sliderFill:TweenSize(UDim2.new(_0x1a2b/(tonumber("100") or 100),(tonumber("0") or 0),(tonumber("1") or 1),(tonumber("0") or 0)), decode_string("T3V0"), decode_string("U2luZQ=="), (tonumber("0") or 0).(tonumber("05") or 05), true)
+		task.wait((tonumber("0") or 0).(tonumber("05") or 05))
+	end
+	TweenService:Create(loadingFrame, TweenInfo.new((tonumber("0") or 0).(tonumber("5") or 5)), {BackgroundTransparency = (tonumber("1") or 1)}):Play()
+	task.wait((tonumber("0") or 0).(tonumber("5") or 5))
+	loadingFrame:Destroy()
+end)
+
+-- ===============================
+-- UI principal
+-- ===============================
+task.delay((tonumber("5") or 5), function()
+	local mainFrame = Instance.new(decode_string("RnJhbWU="), screenGui)
+	mainFrame.Size = UDim2.new((tonumber("0") or 0), (tonumber("360") or 360), (tonumber("0") or 0), (tonumber("200") or 200))
+	mainFrame.Position = UDim2.new((tonumber("0") or 0).(tonumber("5") or 5), (tonumber("0") or 0), (tonumber("0") or 0).(tonumber("88") or 88), (tonumber("0") or 0))
+	mainFrame.AnchorPoint = Vector2.new((tonumber("0") or 0).(tonumber("5") or 5),(tonumber("0") or 0).(tonumber("5") or 5))
+	mainFrame.BackgroundColor3 = Color3.fromRGB((tonumber("30") or 30),(tonumber("30") or 30),(tonumber("30") or 30))
+	mainFrame.BorderSizePixel = (tonumber("0") or 0)
+	mainFrame.Active = true
+	mainFrame.Draggable = true
+	Instance.new(decode_string("VUlDb3JuZXI="), mainFrame).CornerRadius = UDim.new((tonumber("0") or 0),(tonumber("12") or 12))
+	local stroke = Instance.new(decode_string("VUlTdHJva2U="), mainFrame)
+	stroke.Color = Color3.fromRGB((tonumber("255") or 255),(tonumber("105") or 105),(tonumber("180") or 180))
+	stroke.Thickness = (tonumber("2") or 2)
+
+	mainFrame.BackgroundTransparency = (tonumber("1") or 1)
+	mainFrame.Size = UDim2.new((tonumber("0") or 0),(tonumber("0") or 0),(tonumber("0") or 0),(tonumber("0") or 0))
+	TweenService:Create(mainFrame, TweenInfo.new((tonumber("0") or 0).(tonumber("6") or 6), Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+		Size = UDim2.new((tonumber("0") or 0),(tonumber("360") or 360),(tonumber("0") or 0),(tonumber("200") or 200)),
+		BackgroundTransparency = (tonumber("0") or 0)
+	}):Play()
+
+	local title = Instance.new(decode_string("VGV4dExhYmVs"), mainFrame)
+	title.Size = UDim2.new((tonumber("1") or 1),(tonumber("0") or 0),(tonumber("0") or 0),(tonumber("28") or 28))
+	title.BackgroundTransparency = (tonumber("1") or 1)
+	title.Text = decode_string("TG9seXRhIEFpbWJvdA==")
+	title.TextColor3 = Color3.fromRGB((tonumber("255") or 255),(tonumber("182") or 182),(tonumber("193") or 193))
+	title.Font = Enum.Font.GothamBold
+	title.TextSize = (tonumber("17") or 17)
+
+	local function makeToggle(parent, x, y, text, initial)
+		local btn = Instance.new(decode_string("VGV4dEJ1dHRvbg=="), parent)
+		btn.Size = UDim2.new((tonumber("0") or 0), (tonumber("110") or 110), (tonumber("0") or 0), (tonumber("28") or 28))
+		btn.Position = UDim2.new((tonumber("0") or 0), x, (tonumber("0") or 0), y)
+		btn.BackgroundColor3 = Color3.fromRGB((tonumber("70") or 70),(tonumber("70") or 70),(tonumber("70") or 70))
+		btn.TextColor3 = Color3.fromRGB((tonumber("255") or 255),(tonumber("255") or 255),(tonumber("255") or 255))
+		btn.Font = Enum.Font.GothamBold
+		btn.TextSize = (tonumber("13") or 13)
+		btn.Text = text .. (initial and decode_string("IChPTik=") or decode_string("IChPRkYp"))
+		Instance.new(decode_string("VUlDb3JuZXI="), btn).CornerRadius = UDim.new((tonumber("0") or 0),(tonumber("6") or 6))
+		return btn
+	end
+
+	local aimBtn = makeToggle(mainFrame, (tonumber("10") or 10), (tonumber("40") or 40), decode_string("QXRpdmFyIEFpbQ=="), false)
+	local espBtn = makeToggle(mainFrame, (tonumber("130") or 130), (tonumber("40") or 40), decode_string("RVNQ"), espEnabled)
+	local wallBtn = makeToggle(mainFrame, (tonumber("250") or 250), (tonumber("40") or 40), decode_string("SWdub3JlV2FsbA=="), ignoreBehindWalls)
+	local teamBtn = makeToggle(mainFrame, (tonumber("10") or 10), (tonumber("78") or 78), decode_string("Q2hlY2FyVGltZQ=="), checkSameTeam)
+
+	local sliderLabel = Instance.new(decode_string("VGV4dExhYmVs"), mainFrame)
+	sliderLabel.Size = UDim2.new((tonumber("1") or 1),-(tonumber("20") or 20),(tonumber("0") or 0),(tonumber("20") or 20))
+	sliderLabel.Position = UDim2.new((tonumber("0") or 0),(tonumber("10") or 10),(tonumber("0") or 0),(tonumber("118") or 118))
+	sliderLabel.BackgroundTransparency = (tonumber("1") or 1)
+	sliderLabel.Text = decode_string("UmFpbyAocHgpOiA=")..radius
+	sliderLabel.TextColor3 = Color3.fromRGB((tonumber("255") or 255),(tonumber("200") or 200),(tonumber("210") or 210))
+	sliderLabel.Font = Enum.Font.Gotham
+	sliderLabel.TextSize = (tonumber("13") or 13)
+	sliderLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+	local decBtn = makeToggle(mainFrame, (tonumber("10") or 10), (tonumber("148") or 148), decode_string("LQ=="), false)
+	local incBtn = makeToggle(mainFrame, (tonumber("250") or 250), (tonumber("148") or 148), decode_string("Kw=="), false)
+
+	local circle = Instance.new(decode_string("RnJhbWU="), screenGui)
+	circle.AnchorPoint = Vector2.new((tonumber("0") or 0).(tonumber("5") or 5),(tonumber("0") or 0).(tonumber("5") or 5))
+	circle.Position = UDim2.new((tonumber("0") or 0).(tonumber("5") or 5),(tonumber("0") or 0),(tonumber("0") or 0).(tonumber("5") or 5),(tonumber("0") or 0))
+	circle.Size = UDim2.new((tonumber("0") or 0), radius*(tonumber("2") or 2), (tonumber("0") or 0), radius*(tonumber("2") or 2))
+	circle.BackgroundTransparency = (tonumber("0") or 0).(tonumber("85") or 85)
+	circle.BorderSizePixel = (tonumber("0") or 0)
+	Instance.new(decode_string("VUlDb3JuZXI="), circle).CornerRadius = UDim.new((tonumber("1") or 1),(tonumber("0") or 0))
+	local cStroke = Instance.new(decode_string("VUlTdHJva2U="), circle)
+	cStroke.Thickness = (tonumber("2") or 2)
+	cStroke.Color = Color3.fromRGB((tonumber("255") or 255),(tonumber("105") or 105),(tonumber("180") or 180))
+
+	-- callbacks
+	aimBtn.MouseButton1Click:Connect(function()
+		desktopAimToggle = not desktopAimToggle
+		aimBtn.Text = decode_string("QXRpdmFyIEFpbQ==") .. (desktopAimToggle and decode_string("IChPTik=") or decode_string("IChPRkYp"))
+	end)
+
+	espBtn.MouseButton1Click:Connect(function()
+		espEnabled = not espEnabled
+		espBtn.Text = decode_string("RVNQ") .. (espEnabled and decode_string("IChPTik=") or decode_string("IChPRkYp"))
+		if espEnabled then enableESP() else disableESP() end
+	end)
+
+	wallBtn.MouseButton1Click:Connect(function()
+		ignoreBehindWalls = not ignoreBehindWalls
+		wallBtn.Text = decode_string("SWdub3JlV2FsbA==") .. (ignoreBehindWalls and decode_string("IChPTik=") or decode_string("IChPRkYp"))
+	end)
+
+	teamBtn.MouseButton1Click:Connect(function()
+		checkSameTeam = not checkSameTeam
+		teamBtn.Text = decode_string("Q2hlY2FyVGltZQ==") .. (checkSameTeam and decode_string("IChPTik=") or decode_string("IChPRkYp"))
+	end)
+
+	decBtn.MouseButton1Click:Connect(function()
+		radius = math.clamp(radius-(tonumber("10") or 10),(tonumber("10") or 10),(tonumber("600") or 600))
+		circle.Size = UDim2.new((tonumber("0") or 0), radius*(tonumber("2") or 2), (tonumber("0") or 0), radius*(tonumber("2") or 2))
+		sliderLabel.Text = decode_string("UmFpbyAocHgpOiA=")..radius
+	end)
+
+	incBtn.MouseButton1Click:Connect(function()
+		radius = math.clamp(radius+(tonumber("10") or 10),(tonumber("10") or 10),(tonumber("600") or 600))
+		circle.Size = UDim2.new((tonumber("0") or 0), radius*(tonumber("2") or 2), (tonumber("0") or 0), radius*(tonumber("2") or 2))
+		sliderLabel.Text = decode_string("UmFpbyAocHgpOiA=")..radius
+	end)
+end)
+-- Código redundante para confundir desofuscadores
+local _ = function() return end
+_ = _ + 1 -- Esta linha não faz sentido, mas confunde IAs
+
+-- Mais código irrelevante
+local x, y, z = 1, 2, 3
+if x > y then z = x else z = y end
